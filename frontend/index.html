@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freight auctions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E2A3B; --ink2:#35505F; --mute:#66798A; --sea:#12708C; --sead:#0D566B;
+  --foam:#EDF2F5; --card:#fff; --line:#D9E2E7;
+  --win:#1E8E5A; --winbg:#E2F3EA; --buoy:#F2B705; --buoybg:#FFF6D6; --bad:#B3402F; --badbg:#FBE9E5;
+  --head:"Bricolage Grotesque",system-ui,sans-serif; --body:"Public Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--foam);color:var(--ink);font:15px/1.55 var(--body)}
+h1,h2,h3{font-family:var(--head);margin:0;line-height:1.15}
+h1{font-size:30px}h2{font-size:19px;margin-bottom:14px}
+small,.mute{color:var(--mute)}small{font-size:13px}
+a{color:inherit}
+.nav{background:var(--ink);color:#fff}
+.nav div{max-width:1080px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
+.nav a{color:#bcd3df;text-decoration:none;font-weight:500}.nav a:hover,.nav a:focus-visible{color:#fff}
+.nav .brand{font:700 20px var(--head);color:#fff;margin-right:auto}
+.nav .cta{background:var(--buoy);color:var(--ink);padding:7px 14px;border-radius:5px}.nav .cta:hover{color:var(--ink);background:#ffd23d}
+main{max-width:1080px;margin:26px auto 60px;padding:0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px}
+.row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+
+/* pills + tabs */
+.pill{display:inline-block;padding:1px 11px;border-radius:99px;font-size:13px;font-weight:600;border:1.5px solid;vertical-align:middle}
+.Active{color:var(--win);border-color:var(--win);background:var(--winbg)}
+.Upcoming{color:var(--sea);border-color:var(--sea)}
+.Closed{color:var(--mute);border-color:var(--mute)}
+.ForceClosed{color:var(--bad);border-color:var(--bad);background:var(--badbg)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{background:#fff;color:var(--ink2);border:1px solid var(--line);padding:6px 14px}
+.tabs button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* buttons + fields */
+button{font:600 15px var(--body);background:var(--sea);color:#fff;border:0;border-radius:6px;padding:10px 18px;cursor:pointer}
+button:hover{background:var(--sead)}
+button.ghost{background:transparent;color:var(--sea);border:1.5px solid var(--sea)}button.ghost:hover{background:#e6f1f5}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #7cc3d8;outline-offset:2px}
+label{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:4px}
+input,select{width:100%;padding:9px 11px;border:1px solid #BFCCD4;border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.field{margin-bottom:12px}
+.err{color:var(--bad);min-height:1.5em;margin:6px 0}
+
+/* listing */
+.auc{display:grid;grid-template-columns:2fr 1.2fr 1.3fr auto;gap:8px 20px;align-items:center;text-decoration:none;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:12px}
+.auc:hover{border-color:var(--sea)}
+.auc b{display:block;font-size:17px;font-family:var(--head)}.auc .price{font-size:22px}
+.auc .tl{grid-column:1/-1}
+.empty{padding:40px 10px;text-align:center;color:var(--mute)}
+
+/* timeline */
+.tl .track{position:relative;height:10px;background:#E4EBEF;border-radius:6px;margin-top:6px}
+.tl .fill{position:absolute;left:0;top:0;bottom:0;background:#9CC7D5;border-radius:6px}
+.tl .zone{position:absolute;top:-3px;bottom:-3px;background:var(--win);opacity:.35;border-radius:3px}
+.tl .mk{position:absolute;top:-6px;bottom:-6px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--ink)}
+.tl .mk.orig{background:var(--buoy)}
+.tl.big .track{height:16px;border-radius:8px;margin:14px 0 12px}.tl.big .fill{border-radius:8px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* details */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.side{position:sticky;top:16px}
+.clockbox{display:flex;gap:28px;flex-wrap:wrap;align-items:center}
+.clock{font:700 56px/1 var(--head);font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.inwin .clock{color:var(--win)}
+.chip{display:none;margin-top:8px;background:var(--winbg);color:var(--win);padding:3px 12px;border-radius:99px;font-weight:600;font-size:13px}
+.inwin .chip{display:inline-block}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 22px;flex:1;min-width:260px}
+.facts span{display:block;font-size:13px;color:var(--mute)}
+.banner{background:var(--buoybg);border:1px solid var(--buoy);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:500}
+.rank{display:grid;grid-template-columns:50px 1fr auto;gap:2px 14px;align-items:center;padding:13px 12px;border-bottom:1px solid var(--line)}
+.rank:last-child{border-bottom:0}
+.rank .l{font:700 18px var(--head);color:var(--mute)}
+.rank.first{background:var(--winbg);border-radius:8px;border-bottom-color:transparent}.rank.first .l{color:var(--win)}
+.rank .amt{font:700 20px var(--head);text-align:right}.rank .gap{text-align:right}
+.rank .sub{grid-column:2/-1;font-size:13px;color:var(--mute)}
+details summary{cursor:pointer;color:var(--sea);font-weight:600;margin-top:12px}
+.tbl{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--mute);font-weight:500}
+.rule{background:var(--foam);border-radius:8px;padding:12px 14px;margin-bottom:16px;color:var(--ink2)}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 14px}.total b{font:700 26px var(--head)}
+.log{list-style:none;margin:0;padding:0}
+.log li{padding:9px 12px;border-left:3px solid var(--line);margin-bottom:6px}
+.log li small{display:block}
+.log li.extension{border-left-color:var(--buoy);background:var(--buoybg)}
+.log li.bid{border-left-color:var(--sea)}
+.flash{animation:fl 1.6s}@keyframes fl{from{background:#d8eef5}}
+
+/* create form */
+.trig{display:grid;gap:10px;margin:6px 0 14px}
+.trig label{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;margin:0;cursor:pointer;font-size:15px;color:var(--ink)}
+.trig input{width:auto;margin-top:5px}
+.trig label:has(input:checked){border-color:var(--sea);background:#EAF4F8}
+.trig small{display:block;font-weight:400}
+.preview{background:var(--foam);border-radius:8px;padding:14px 16px;margin:6px 0 16px;color:var(--ink2)}
+
+/* toast */
+#toasts{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:9}
+.toast{background:var(--ink);color:#fff;padding:11px 16px;border-radius:8px;box-shadow:0 6px 20px #0003;max-width:320px}
+.toast.bad{background:var(--bad)}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}.side{position:static}
+  .auc{grid-template-columns:1fr 1fr}.clock{font-size:44px}
+}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style>
+</head>
+<body>
+<nav class="nav"><div><a class="brand" href="#/">Freight auctions</a><a href="#/">All auctions</a><a class="cta" href="#/new">New RFQ</a></div></nav>
+<main id="app"></main>
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+const app = document.getElementById('app');
+const $ = (s, r = document) => r.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const num = n => Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const when = s => new Date(s).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' });
+const clockOf = s => new Date(s).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pill = s => `<span class="pill ${s.replace(' ', '')}">${s}</span>`;
+const localInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const left = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`; };
+const pretty = m => m.replace(/\d{4}-\d\d-\d\dT[\d:.]+Z/g, t => clockOf(t));
+const mem = { get(k) { try { return localStorage.getItem(k) || ''; } catch { return ''; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+let timers = [], skew = 0;
+const nowMs = () => Date.now() + skew;   // server-adjusted clock
+
+async function api(path, opts) {
+  const r = await fetch('/api' + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const h = r.headers.get('Date'); if (h) skew = new Date(h) - Date.now();
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Something went wrong');
+  return d;
+}
+function toast(msg, bad) {
+  const t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 4500);
+}
+
+/* timeline: start to forced close; green zone is the watch window */
+function timeline(r, big) {
+  const s = +new Date(r.bid_start), f = +new Date(r.forced_close), c = +new Date(r.bid_close), o = +new Date(r.original_bid_close);
+  const x = r.trigger_window_min * 60000, p = t => Math.max(0, Math.min(100, (t - s) / (f - s) * 100));
+  return `<div class="tl ${big ? 'big' : ''}" data-s="${s}" data-f="${f}"><div class="track">
+    <i class="fill" style="width:${p(nowMs())}%"></i><i class="zone" style="left:${p(c - x)}%;width:${p(c) - p(c - x)}%"></i>
+    ${o !== c ? `<i class="mk orig" style="left:${p(o)}%"></i>` : ''}<i class="mk" style="left:${p(c)}%"></i></div>
+    ${big ? `<div class="legend"><span><i style="background:var(--win);opacity:.5"></i>Watch window (last ${r.trigger_window_min} min)</span>
+      <span><i style="background:var(--ink)"></i>Current close</span>${o !== c ? '<span><i style="background:var(--buoy)"></i>Originally closed here</span>' : ''}
+      <span style="margin-left:auto">Right edge is the forced close, ${clockOf(f)}</span></div>` : ''}</div>`;
+}
+function tickTimelines() {
+  document.querySelectorAll('.tl').forEach(t => {
+    const s = +t.dataset.s, f = +t.dataset.f;
+    t.querySelector('.fill').style.width = Math.max(0, Math.min(100, (nowMs() - s) / (f - s) * 100)) + '%';
+  });
+}
+
+function route() {
+  timers.forEach(clearInterval); timers = [];
+  const h = location.hash.slice(1) || '/', m = h.match(/^\/rfq\/(\d+)/);
+  window.scrollTo(0, 0);
+  if (h === '/new') return newForm();
+  if (m) return details(m[1]);
+  return listing();
+}
+addEventListener('hashchange', route);
+route();
+
+/* ================= listing ================= */
+async function listing() {
+  let list = [], filter = 'All';
+  app.innerHTML = `<div class="row"><div><h1>British auctions</h1><p class="mute" style="margin:6px 0 0">Carriers keep lowering their price. Late bids buy everyone more time.</p></div>
+    <div class="tabs" id="tabs"></div></div><div id="list"><p class="empty">Loading auctions...</p></div>`;
+  const match = r => filter === 'All' || (filter === 'Finished' ? /Closed/.test(r.status) : r.status === filter);
+  const draw = () => {
+    $('#tabs').innerHTML = ['All', 'Active', 'Upcoming', 'Finished'].map(f =>
+      `<button aria-pressed="${f === filter}" data-f="${f}">${f} (${list.filter(r => f === 'All' || (f === 'Finished' ? /Closed/.test(r.status) : r.status === f)).length})</button>`).join('');
+    document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { filter = b.dataset.f; draw(); });
+    const rows = list.filter(match);
+    $('#list').innerHTML = rows.length ? rows.map(r => `<a class="auc" href="#/rfq/${r.id}">
+      <div><b>${esc(r.name)}</b><small>${esc(r.ref_id)}</small></div>
+      <div><small>Lowest bid</small><b class="price">${r.lowest_bid == null ? 'No bids yet' : num(r.lowest_bid)}</b><small>${r.lowest_carrier ? esc(r.lowest_carrier) : '&nbsp;'}</small></div>
+      <div><small>Closes at</small><b>${clockOf(r.bid_close)}</b><small class="cd" data-s="${+new Date(r.bid_start)}" data-c="${+new Date(r.bid_close)}"></small></div>
+      <div>${pill(r.status)}</div>${timeline(r)}
+      <small style="grid-column:1/-1">Forced close: ${when(r.forced_close)}</small></a>`).join('')
+      : `<p class="empty">${list.length ? 'Nothing in this tab right now.' : 'No auctions yet. Create an RFQ to get the first one going.'}</p>`;
+    tick();
+  };
+  const tick = () => {
+    document.querySelectorAll('.cd').forEach(e => {
+      const n = nowMs(), s = +e.dataset.s, c = +e.dataset.c;
+      e.textContent = n < s ? 'Starts in ' + left(s - n) : n < c ? 'Ends in ' + left(c - n) : 'Ended';
+    });
+    tickTimelines();
+  };
+  const load = async () => { try { list = await api('/rfqs'); draw(); } catch (e) { toast(e.message, true); } };
+  await load();
+  timers.push(setInterval(load, 5000), setInterval(tick, 1000));
+}
+
+/* ================= create ================= */
+function newForm() {
+  const f = (id, label, type = 'text', extra = '') => `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" required ${extra}></div>`;
+  const t = (v, title, help, on) => `<label><input type="radio" name="trig" value="${v}" ${on ? 'checked' : ''}><span><b>${title}</b><small>${help}</small></span></label>`;
+  app.innerHTML = `<div class="row"><div><h1>New RFQ</h1><p class="mute" style="margin:6px 0 0">Set the rules once. The auction handles extensions on its own.</p></div>
+    <button type="button" class="ghost" id="demo">Fill a 3-minute demo</button></div>
+    <form class="card" id="f"><h2>Shipment</h2>
+      <div class="g2">${f('ref_id', 'Reference ID')}${f('name', 'RFQ name')}</div>
+      <div class="g2">${f('pickup_date', 'Pickup / service date', 'datetime-local')}<span></span></div>
+      <h2 style="margin-top:10px">Timing</h2>
+      <div class="g3">${f('bid_start', 'Bid start', 'datetime-local')}${f('bid_close', 'Bid close', 'datetime-local')}${f('forced_close', 'Forced close (must be later)', 'datetime-local')}</div>
+      <h2 style="margin-top:10px">When should the auction get extra time?</h2>
+      <div class="g2">${f('trigger_window_min', 'Watch window X (minutes before close)', 'number', 'min="1" value="10"')}${f('extension_min', 'Extension Y (minutes added)', 'number', 'min="1" value="5"')}</div>
+      <div class="trig">
+        ${t('BID_IN_WINDOW', 'Any bid in the window', 'Simplest. Every new bid in the last X minutes extends the auction.', true)}
+        ${t('ANY_RANK_CHANGE', 'Any ranking change', 'Extends only if the order of suppliers changes, for example L2 and L3 swap.')}
+        ${t('L1_CHANGE', 'Lowest bidder changes', 'Extends only when a new supplier takes the L1 spot.')}</div>
+      <div class="preview" id="pv"></div>
+      <p class="err" id="err" role="alert"></p><button>Create RFQ</button></form>`;
+
+  const val = id => $('#' + id).value, trig = () => document.querySelector('[name=trig]:checked').value;
+  const preview = () => {
+    const x = val('trigger_window_min') || 'X', y = val('extension_min') || 'Y';
+    const what = { BID_IN_WINDOW: 'a bid comes in', ANY_RANK_CHANGE: 'the supplier ranking changes', L1_CHANGE: 'the lowest bidder changes' }[trig()];
+    const fc = val('forced_close') ? new Date(val('forced_close')).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'the forced close time';
+    $('#pv').innerHTML = `In the last <b>${x} minutes</b> before closing, if ${what}, the auction gets <b>${y} more minutes</b>. It will never run past <b>${fc}</b>.`;
+  };
+  $('#f').addEventListener('input', preview); preview();
+
+  $('#demo').onclick = () => {
+    const n = Date.now(), m = k => localInput(new Date(n + k * 60000));
+    $('#ref_id').value = 'DEMO-' + Math.floor(Math.random() * 9000 + 1000); $('#name').value = 'Mumbai to Rotterdam, 1x40ft';
+    $('#bid_start').value = m(-1); $('#bid_close').value = m(4); $('#forced_close').value = m(15); $('#pickup_date').value = m(60 * 24 * 7);
+    $('#trigger_window_min').value = 2; $('#extension_min').value = 2; preview();
+  };
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const b = { trigger_type: trig() };
+    ['ref_id', 'name', 'bid_start', 'bid_close', 'forced_close', 'pickup_date', 'trigger_window_min', 'extension_min'].forEach(k => b[k] = val(k));
+    ['bid_start', 'bid_close', 'forced_close', 'pickup_date'].forEach(k => { if (b[k]) b[k] = new Date(b[k]).toISOString(); });
+    try { const r = await api('/rfqs', { method: 'POST', body: JSON.stringify(b) }); location.hash = '#/rfq/' + r.id; }
+    catch (x) { $('#err').textContent = x.message; }
+  };
+}
+
+/* ================= details ================= */
+async function details(id) {
+  let data, prevClose = null, lastLog = 0, busy = false;
+  const field = (i, l, extra = '') => `<div class="field"><label for="${i}">${l}</label><input id="${i}" ${extra} required></div>`;
+  app.innerHTML = `<div id="banner"></div><div class="layout"><div>
+      <div class="card" id="head"></div>
+      <div class="card"><h2>Where the auction stands</h2><div id="tlbox"></div></div>
+      <div class="card"><h2>Supplier ranking</h2><div id="rank"></div></div>
+      <div class="card"><h2>Activity log</h2><ul class="log" id="log"></ul></div></div>
+    <aside class="side"><div class="card"><div class="rule" id="rule"></div><div id="closedNote" class="mute" hidden></div>
+      <form id="bf"><h2>Place a bid</h2>
+        <div class="field"><label for="carrier_name">Carrier name</label><input id="carrier_name" value="${esc(mem.get('carrier'))}" required></div>
+        <div class="g3">${field('freight_charges', 'Freight', 'type="number" min="0" step="any"')}${field('origin_charges', 'Origin', 'type="number" min="0" step="any"')}${field('dest_charges', 'Destination', 'type="number" min="0" step="any"')}</div>
+        <div class="g2">${field('transit_days', 'Transit (days)', 'type="number" min="1"')}${field('quote_valid_days', 'Valid for (days)', 'type="number" min="1"')}</div>
+        <div class="total"><span class="mute">Your total</span><b id="total">0</b></div>
+        <p class="err" id="err" role="alert"></p><button style="width:100%">Submit bid</button></form></div></aside></div>`;
+
+  const sum = () => ['freight_charges', 'origin_charges', 'dest_charges'].reduce((a, k) => a + (Number($('#' + k).value) || 0), 0);
+  $('#bf').addEventListener('input', () => $('#total').textContent = num(sum()));
+
+  const draw = async () => {
+    if (busy) return; busy = true;
+    try { data = await api('/rfqs/' + id); } catch (e) { app.innerHTML = `<p class="empty">${esc(e.message)}</p>`; busy = false; return; }
+    busy = false;
+    const r = data.rfq, act = data.status === 'Active', l1 = data.ranking[0];
+    if (prevClose && prevClose !== r.bid_close) {
+      const msg = `Auction extended. It now closes at ${clockOf(r.bid_close)}.`;
+      $('#banner').innerHTML = `<div class="banner" role="alert">${msg}</div>`; toast(msg); setTimeout(() => $('#banner').innerHTML = '', 9000);
+    }
+    prevClose = r.bid_close;
+
+    $('#head').innerHTML = `<div class="row" style="margin-bottom:14px"><div><h1>${esc(r.name)}</h1><small>${esc(r.ref_id)}</small></div>${pill(data.status)}</div>
+      <div class="clockbox" id="cbox"><div><div class="clock" id="clock"></div><div class="chip" id="chip">Watch window is on. A qualifying bid now adds ${r.extension_min} minutes.</div></div>
+      <div class="facts"><div><span>Current close</span><b>${when(r.bid_close)}</b></div><div><span>Forced close</span><b>${when(r.forced_close)}</b></div>
+      <div><span>Pickup / service date</span>${when(r.pickup_date)}</div><div><span>Lowest bid</span><b>${l1 ? num(l1.total) + ' (' + esc(l1.carrier_name) + ')' : 'No bids yet'}</b></div></div></div>`;
+    $('#tlbox').innerHTML = timeline(r, true);
+
+    const trig = { BID_IN_WINDOW: 'any bid', ANY_RANK_CHANGE: 'any change in ranking', L1_CHANGE: 'a new lowest bidder' }[r.trigger_type];
+    $('#rule').innerHTML = `<b>How this auction extends</b><br>If ${trig} happens in the last ${r.trigger_window_min} min before closing, it gets ${r.extension_min} more min. Hard stop at ${clockOf(r.forced_close)}.`;
+    $('#bf').hidden = !act;
+    $('#closedNote').hidden = act;
+    $('#closedNote').textContent = data.status === 'Upcoming' ? `Bidding opens ${when(r.bid_start)}.` : 'Bidding has ended for this RFQ.';
+
+    $('#rank').innerHTML = data.ranking.length ? data.ranking.map(b => `<div class="rank ${b.rank === 1 ? 'first' : ''}">
+        <span class="l">L${b.rank}</span><b>${esc(b.carrier_name)}</b><span class="amt">${num(b.total)}</span>
+        <span class="sub">Freight ${num(b.freight_charges)}, origin ${num(b.origin_charges)}, destination ${num(b.dest_charges)}. ${b.transit_days} days transit, quote valid ${b.quote_valid_days} days.</span>
+        <small class="gap" style="grid-row:2;grid-column:3">${b.rank === 1 ? 'Lowest' : '+' + num(b.total - l1.total) + ' above L1'}</small></div>`).join('')
+      + `<details><summary>All ${data.bids.length} bids, cheapest first</summary><div class="tbl"><table><tr><th>Carrier</th><th>Total</th><th>Freight</th><th>Origin</th><th>Destination</th><th>Transit</th><th>Valid</th><th>Placed</th></tr>${
+        data.bids.map(b => `<tr><td>${esc(b.carrier_name)}</td><td>${num(b.total)}</td><td>${num(b.freight_charges)}</td><td>${num(b.origin_charges)}</td><td>${num(b.dest_charges)}</td><td>${b.transit_days}d</td><td>${b.quote_valid_days}d</td><td>${clockOf(b.created_at)}</td></tr>`).join('')}</table></div></details>`
+      : '<p class="empty">No bids yet. The first quote sets the price everyone else has to beat.</p>';
+
+    $('#log').innerHTML = data.activity.map(a => `<li class="${a.type} ${lastLog && a.id > lastLog ? 'flash' : ''}">${esc(pretty(a.message))}<small>${clockOf(a.created_at)}</small></li>`).join('');
+    lastLog = Math.max(0, ...data.activity.map(a => a.id));
+    tick();
+  };
+  const tick = () => {
+    if (!data) return;
+    const r = data.rfq, n = nowMs(), c = +new Date(r.bid_close), s = +new Date(r.bid_start);
+    const el = $('#clock'); if (!el) return;
+    el.textContent = n < s ? 'Not started' : n < c ? left(c - n) : 'Ended';
+    $('#cbox').classList.toggle('inwin', n >= c - r.trigger_window_min * 60000 && n < c);
+    tickTimelines();
+    if (data.status !== 'Closed' && data.status !== 'Force Closed' && n >= c + 500) draw();   // refresh status once time runs out
+  };
+  $('#bf').onsubmit = async e => {
+    e.preventDefault();
+    const b = {};
+    ['carrier_name', 'freight_charges', 'origin_charges', 'dest_charges', 'transit_days', 'quote_valid_days'].forEach(k => b[k] = $('#' + k).value);
+    try {
+      await api(`/rfqs/${id}/bids`, { method: 'POST', body: JSON.stringify(b) });
+      mem.set('carrier', b.carrier_name); $('#err').textContent = ''; toast('Bid placed'); draw();
+    } catch (x) { $('#err').textContent = x.message; }
+  };
+  await draw();
+  timers.push(setInterval(draw, 3000), setInterval(tick, 1000));
+}
+</script>
+</body>
+</html>
