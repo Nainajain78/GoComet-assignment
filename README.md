@@ -137,13 +137,4 @@ The backend was tested with a script against the running server:
 
 The rank-change trigger was also checked by hand in the browser.
 
-## Not included
 
-- No login. The carrier name is typed in, and buyer and supplier aren't separate roles.
-- No stats page for the success metrics (bids per RFQ, final price compared to non-extended auctions). The data for them is already in the bids table.
-- Single server only. A multi-server setup would use Postgres instead of SQLite.
-- No automated test suite in the repo.
-
-## How this was built
-
-This project was built with help from an AI assistant (Claude). [Replace this line with what you wrote or changed yourself, if anything.]
